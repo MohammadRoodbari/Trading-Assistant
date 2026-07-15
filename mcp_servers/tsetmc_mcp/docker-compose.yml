@@ -1,0 +1,13 @@
+
+services:
+  mcp-tsetmc:
+    image: mim/tsetmc-mcp:latest
+    container_name: mcp-tsetmc
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    ports:
+      - "7000:8000"
