@@ -1095,7 +1095,7 @@ async def main():
 if __name__ == "__main__":
     if "--http" in sys.argv:
         http_host = os.getenv("MCP_HTTP_HOST", "0.0.0.0")
-        http_port = int(os.getenv("MCP_HTTP_PORT", "8080"))
+        http_port = int(os.getenv("MCP_HTTP_PORT", "8000"))
         _get_http_tools()  # eagerly init so config file is written on start
         logger.info(f"Starting FastMCP HTTP server on {http_host}:{http_port}/mcp")
         _fastmcp.run(

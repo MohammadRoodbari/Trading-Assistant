@@ -614,14 +614,14 @@ def analyze_coin(
         Dict containing price data, all extended indicators, market sentiment,
         and (for stocks) stock score + trade setup.
     """
-    from tradingview_mcp.core.services.indicators import (
+    from src.core.services.indicators import (
         extract_extended_indicators,
         analyze_timeframe_context,
         compute_stock_score,
         compute_trade_setup,
         compute_trade_quality,
     )
-    from tradingview_mcp.core.utils.validators import is_stock_exchange, normalize_tradingview_symbol, resolve_screener_for_symbol
+    from src.core.utils.validators import is_stock_exchange, normalize_tradingview_symbol, resolve_screener_for_symbol
 
     if not _TA_AVAILABLE:
         return {"error": "tradingview_ta is missing; run `uv sync`."}
@@ -644,7 +644,7 @@ def analyze_coin(
         # scoring) with a None they can't act on. Pull it from the screener
         # endpoint as a best-effort augmentation.
         if indicators.get("ATR") is None:
-            from tradingview_mcp.core.services.screener_provider import fetch_atr_for_ticker
+            from src.core.services.screener_provider import fetch_atr_for_ticker
             atr_value = fetch_atr_for_ticker(full_symbol, screener, timeframe)
             if atr_value is not None:
                 indicators["ATR"] = atr_value
@@ -953,7 +953,7 @@ def run_multi_timeframe_analysis(
         Multi-timeframe analysis dict with per-TF breakdown, alignment status,
         and trading recommendation.
     """
-    from tradingview_mcp.core.services.indicators import (
+    from src.core.services.indicators import (
         extract_extended_indicators,
         analyze_timeframe_context,
     )
@@ -966,7 +966,7 @@ def run_multi_timeframe_analysis(
     # symbol aliasing redirected gold/FX to TVC: but the screener stayed on the
     # caller's "crypto" default, so every timeframe returned "No data". This is
     # the same fix analyze_coin already uses (see resolve_screener_for_symbol).
-    from tradingview_mcp.core.utils.validators import resolve_screener_for_symbol
+    from src.core.utils.validators import resolve_screener_for_symbol
     screener = resolve_screener_for_symbol(symbol, exchange)
     timeframes = ["1W", "1D", "4h", "1h", "15m"]
     tf_labels = {
@@ -1026,7 +1026,7 @@ def run_multi_timeframe_analysis(
             # 5 timeframes. One POST per timeframe is acceptable (5 total)
             # because run_multi_timeframe_analysis is a single-symbol path.
             if indicators.get("ATR") is None:
-                from tradingview_mcp.core.services.screener_provider import fetch_atr_for_ticker
+                from src.core.services.screener_provider import fetch_atr_for_ticker
                 atr_value = fetch_atr_for_ticker(symbol, screener, tf)
                 if atr_value is not None:
                     indicators["ATR"] = atr_value
