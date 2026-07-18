@@ -1,0 +1,99 @@
+
+services:
+  # ---------- TSETMC MCP ----------
+  tsetmc-mcp:
+    build:
+      context: ./mcp_servers/tsetmc_mcp
+      dockerfile: Dockerfile
+    container_name: mcp-tsetmc
+    restart: unless-stopped
+    ports:
+      - "9070:8000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mcp-net
+
+  # ---------- TRADINGVIEW MCP ----------
+  tradingview-mcp:
+    build:
+      context: ./mcp_servers/tradingview_mcp
+      dockerfile: Dockerfile
+    container_name: tradingview-mcp
+    restart: unless-stopped
+    ports:
+      - "9080:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mcp-net
+
+  # ---------- SEARXNG (backend for websearch MCP) ----------
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    environment:
+      SEARXNG_BASE_URL: http://localhost:8080/
+      SEARXNG_LIMITER: "false"
+    volumes:
+      - ./searxng:/etc/searxng
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mcp-net
+
+  # ---------- WEBSEARCH MCP ----------
+  websearch-mcp:
+    build:
+      context: ./mcp_servers/websearch_mcp
+      dockerfile: Dockerfile
+    container_name: websearch-mcp
+    restart: unless-stopped
+    depends_on:
+      searxng:
+        condition: service_healthy
+    ports:
+      - "9090:8000"
+    environment:
+      SEARXNG_ENGINE_API_BASE_URL: "http://searxng:8080/search"
+      DESIRED_TIMEZONE: "Asia/Tehran"
+      ODS_CONFIG_PATH: "/config/ods_config.json"
+
+      IGNORED_WEBSITES: ""
+      RETURNED_SCRAPPED_PAGES_NO: "3"
+      SCRAPPED_PAGES_NO: "5"
+      PAGE_CONTENT_WORDS_LIMIT: "5000"
+      CITATION_LINKS: "True"
+
+      MAX_IMAGE_RESULTS: "10"
+      MAX_VIDEO_RESULTS: "10"
+      MAX_FILE_RESULTS: "5"
+      MAX_MAP_RESULTS: "5"
+      MAX_SOCIAL_RESULTS: "5"
+
+      TRAFILATURA_TIMEOUT: "15"
+      SCRAPING_TIMEOUT: "20"
+      CACHE_MAXSIZE: "100"
+      CACHE_TTL_MINUTES: "5"
+      CACHE_MAX_AGE_MINUTES: "30"
+      RATE_LIMIT_REQUESTS_PER_MINUTE: "10"
+      RATE_LIMIT_TIMEOUT_SECONDS: "60"
+    networks:
+      - mcp-net
+
+networks:
+  mcp-net:
+    driver: bridge
